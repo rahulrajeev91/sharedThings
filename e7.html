@@ -1,0 +1,81 @@
+<!--  
+CP3101B Assignment 3 - exercise 7 Client
+Improving performance and scalability 
+-->
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+  		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>Shared Things</title>
+
+        <script src="bootstrap/js/jquery.min.js"></script> <!-- version of jquery for bootstrap -->
+        <script src="jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.js"></script> <!-- enough of jquery ui for dragging, no more -->
+        <script src="jquery.ui.touch-punch/jquery.ui.touch-punch.min.js"></script> <!-- http://touchpunch.furf.com/ -->
+		<script src="config.js"></script>
+		<style>
+			.draggable { position: fixed; } 
+		</style>
+		<script src="config.js" ></script>		
+		<script>
+			var socket;
+			world = {};
+			worldChanges = {};
+			function logDrag(event, ui){
+				// //updating local copy of world
+				// $("#world img").each(function(){
+				// 	world[$(this).attr("id")] = $(this).offset();
+				// });
+				//socket.send(JSON.stringify(world));
+
+				var changes = {};
+				changes[event.target.id] = ui.offset;
+				socket.send(JSON.stringify(changes));
+			}
+
+			$(function() { 
+				socket = new WebSocket("ws://"+server+":"+port);
+				socket.onopen = function (event) {
+					console.log("connected");
+				};
+				socket.onclose = function (event) {
+					alert("Server Disconnected. Pls Reconnect or Refresh")
+					console.log("closed code:" + event.code + " reason:" +event.reason + " wasClean:"+event.wasClean);
+				};
+
+				socket.onmessage = function (event) {
+					worldChanges= JSON.parse(event.data);
+					for (var value in worldChanges){
+					  console.log(value + " -> " + JSON.stringify(worldChanges[value]));
+					  //world[value] = worldChanges[value];   //updating local copy of world
+
+					  $("#"+value).offset(worldChanges[value]);
+					}
+				}
+
+				$("#world img").draggable(); 
+				$("#world img").on("dragstart", function(event, ui) { logDrag(event, ui); });
+				$("#world img").on("dragstop" , function(event, ui) { logDrag(event, ui); });
+				$("#world img").on("drag"     , function(event, ui) { logDrag(event, ui); });
+			});
+		</script>
+	</head>
+	<body>
+		<div id="world">
+			<img id="x1" src="images/x.gif" style="z-index:2;" class="draggable" />
+			<img id="x2" src="images/x.gif" style="z-index:2;" class="draggable" />
+			<img id="x3" src="images/x.gif" style="z-index:2;" class="draggable" />
+			<img id="x4" src="images/x.gif" style="z-index:2;" class="draggable" />
+			<img id="x5" src="images/x.gif" style="z-index:2;" class="draggable" />
+			<img id="o1" src="images/o.gif" style="z-index:2;" class="draggable" />
+			<img id="o2" src="images/o.gif" style="z-index:2;" class="draggable" />
+			<img id="o3" src="images/o.gif" style="z-index:2;" class="draggable" />
+			<img id="o4" src="images/o.gif" style="z-index:2;" class="draggable" />
+			<img id="o5" src="images/o.gif" style="z-index:2;" /class="draggable" >
+			<img id="tttboard" src="images/tictactoe.gif" style="z-index:1;" class="draggable" />
+		</div>
+	</body>
+</html>

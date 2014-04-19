@@ -1,0 +1,5 @@
+server slows down under the load when more that 3-4 clients are running.
+the server broadcasts old position when any client is moving an image... this makes the front end stutter
+updating all the world variable is slowing down the system
+adding other UI elements causes the position or offset values to be wrong.
+screen sizes are not consistent

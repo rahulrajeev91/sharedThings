@@ -1,0 +1,11 @@
+server slows down under the load when more that 3-4 clients are running.
+>>Reduced the packet or the amount of data being transmitted by only sending the changes everytime there was one.This system works both ways - client to server and server to client
+
+the server broadcasts old position when any client is moving an image... this makes the front end stutter
+>> When the server broadcasts changes, it sends the updates state to all the connected clients except the original sender. This ensures that there is no more stuttering at the client side.
+
+updating all the world variable is slowing down the system
+>> Only the changes are sent although both the server and the client maintain a local copy of the complete world state.
+
+no default state for the system.
+>>created a default world state that will ensure that the world can be reset at any given time
