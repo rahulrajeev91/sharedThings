@@ -1,13 +1,25 @@
 body {
+
 	position: fixed;
 	height : 100%;
 	width:100%;
 	padding-top: 70px; 
 	/*padding-bottom: 30px;*/
+	background: #555 no-repeat center center fixed;
+	-webkit-background-size: cover; 
+	-moz-background-size: cover; 
+	-o-background-size: cover; 
+	background-size: cover;
 }
 
 .reset-button {
 	margin-right:20px;
+}
+
+.panel-transparent{
+	background: rgb(255, 255, 255); /* Fall-back for browsers that don't
+                                    support rgba */
+    background: rgba(255, 255, 255, .8);
 }
 
 .mypanel{

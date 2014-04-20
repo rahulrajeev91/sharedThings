@@ -48,7 +48,7 @@ function postComment(){
 }
 
 function logDrag(event, ui){
-	// //updating local copy of world
+	//updating local copy of world
 	$("#world img").each(function(){
 		world[$(this).attr("id")] = $(this).position();
 	});
@@ -89,6 +89,97 @@ function resetWorld(){
 	//world = DefaultWorld;
 }
 
+function round(a){
+	return Math.round(100*a)/100;
+}
+
+function handleMotionEvent (event){
+	ax = round(event.acceleration.x);
+	ay = round(event.acceleration.y);
+	az = round(event.acceleration.z);
+	aRms = round(Math.sqrt(Math.pow(ax,2) + Math.pow(ay,2) + Math.pow(az,2)));
+	console.log("ax: " + ax + " ay: " + ay + " az: " + az + " aRms: " + aRms);
+		
+	// rrx = round(event.rotationRate.beta);
+	// rry = round(event.rotationRate.gamma);
+	// rrz = round(event.rotationRate.alpha);
+	// rrRms = round(Math.sqrt(Math.pow(rrx,2) + Math.pow(rry,2) + Math.pow(rrz,2)));
+	// console.log("rrx: " + rrx + " rry: " + rry + " rrz: " + rrz + " rrRms: " + rrRms);
+
+	if((aRms > 15))// && (rrRms > 5))
+	{
+		var result = confirm("Reset game for everyone?");
+		if(result == true)
+		    resetWorldForAll();
+	}
+}
+
+function displayError(error) 
+{
+  var errors = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'Request timeout' };
+  console.log("Error: " + errors[error.code]);
+}
+
+function displayPosition(position) 
+{
+curr_Latitude = round(position.coords.latitude);
+curr_Longitude = round(position.coords.longitude);
+console.log("Latitude: " + curr_Latitude + ", Longitude: " + curr_Longitude);
+weather();
+}
+
+function weather() 
+{
+$api_url = "http://api.openweathermap.org/data/2.5/weather?lat="+ curr_Latitude + "&lon=" + curr_Longitude;
+$.ajax({
+  dataType: 'json',
+  url: $api_url,
+  success: function(json)
+  {
+    console.log(JSON.stringify(json));
+    if (json["cod"] =='200'){
+      var weatherinfo = json['weather'];
+      if(weatherinfo[0]['main'] == "Thunderstorm")
+      {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
+	   }
+      else if (weatherinfo[0]['main'] == "Drizzle")
+      {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/rain.jpg)');
+	   }
+      else if (weatherinfo[0]['main'] == "Rain")
+      {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/rain.jpg)');
+	   }
+      else if (weatherinfo[0]['main'] == "Snow")
+      {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/snow.jpg)');
+	   }
+      else if (weatherinfo[0]['main'] == "Clouds")
+	  {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/clouds.jpg)');
+	  }
+      else if (weatherinfo[0]['main'] == "Extreme")
+      {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
+	   }
+      else
+      {
+	   		console.log(weatherinfo[0]['main']);
+	   		$('#bg').css('background-image','url(images/background/clear.jpg)');
+	   }
+    }
+    else
+      ;//error
+  }
+});   
+}
 $(function() { 
 	resetWorld();
 	ChooseGame(1);
@@ -117,4 +208,11 @@ $(function() {
 	$("#world img").on("dragstart", function(event, ui) { logDrag(event, ui); });
 	$("#world img").on("dragstop" , function(event, ui) { logDrag(event, ui); });
 	$("#world img").on("drag"     , function(event, ui) { logDrag(event, ui); });
+
+	//Geolocation
+    var timeoutVal = 10 * 1000 * 1000;
+    navigator.geolocation.getCurrentPosition( displayPosition, displayError, { enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 });
+
+    //Shake  
+    window.addEventListener ("devicemotion", handleMotionEvent, true);
 });
