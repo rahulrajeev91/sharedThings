@@ -21,9 +21,7 @@ Improving performance and scalability
 
 
 	</head>
-	<body>
-
-
+	<body id = "bg">
 		<nav class="navbar navbar-default navbar-fixed-top">
 		  <div class="container-fluid">
 		    <!-- Brand and toggle get grouped for better mobile display -->
@@ -82,10 +80,9 @@ Improving performance and scalability
 		  </div><!-- /.container-fluid -->
 		</nav>
 
-
 		<div class="container-fluid full-body">
 			<div class="col-sm-9 full-body mypanel"> 
-				<div class="panel panel-default full-body">
+				<div class="panel panel-default full-body panel-transparent">
   					<div class="panel-body full-body">
 						<div id="world">
 
@@ -138,7 +135,7 @@ Improving performance and scalability
 			</div>
 
 			<div class="col-sm-3 full-body mypanel"> 
-				<div class="panel panel-default full-body" >
+				<div class="panel panel-default full-body panel-transparent" >
 					<div class="panel-heading">
 						<form>
 							<div class="input-group">
@@ -152,6 +149,10 @@ Improving performance and scalability
   					<div id="chat-box" class="panel-body">
   					</div>
 				</div>
+			</div>
+
+			<div id="dialog-confirm" title="Reset Game?">
+				<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Do you want to reset the game for everyone?</p>
 			</div>	
 		</div>
 		<!-- Bootstrap -->
