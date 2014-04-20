@@ -21,7 +21,7 @@ var defaultWorld = {
 	"o5":{"top":8,"left":100},
 	"tttboard":{"top":100,"left":100}
 };
-var World = defaultWorld;		//contains the stored global world 
+var World = {};		//contains the stored global world 
 
 wss.on('close', function() {
     console.log('disconnected');
@@ -35,8 +35,8 @@ wss.broadcast = function(data,sender) {
 
 wss.on('connection', function(ws) {
 
-	if(World == {})
-		World = defaultWorld;
+	// if(World == {})
+	// 	World = defaultWorld;
 	ws.send(JSON.stringify(World)); // initial state
 
 	ws.on('message', function(RecievedWorld) {
