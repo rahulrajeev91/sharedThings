@@ -2,20 +2,23 @@
 CP3101B Assignment 3 - exercise 9 Server
 Including World ID and allowing users to choose/create world to share, enable chat and multiple games
 
-Input Data : {"type":"<Type of request>",wid":"<NameOfWorld>", "state":"<Hash containing all the changed states>", "game":"<game ID>"}
+Input Data : {"type":"<Type of request>",wid":"<NameOfWorld>", "state":"<Hash containing all the changed states>", 
+				"game":"<game ID>" , "msg":"<msg as a string>"}
 
 	type:
 		"worldIDChange"	: World ID Changed
 		"getWorldState"	: Get world state
 		"updateWorld"	: sending updated world
+		"msg"			: broadcast msg
 
 Output Data : {"type":"<Type of data>",wid":"<NameOfWorld>", "state":"<Hash containing all the changed states>", 
-				"worlds":"<array of all the world names>", "game":"<game ID>"}
+				"worlds":"<array of all the world names>", "game":"<game ID>", "msg":"<msg as a string>"}
 
 	type:
 		"worldList"		: Sending World name List
 		"worldState"	: sending world state
 		"updateWorld"	: sending world state changes
+		"msg"			: broadcast msg
 */
 
 var config = require('./config_node.js');
@@ -110,6 +113,14 @@ wss.on('connection', function(ws) {
 					return;
 				}
 			}
+		}
+		else if(dataType=="msg"){
+			returnData["type"] = "msg";
+			returnData["wid"] = worldId;
+			returnData["msg"] = changedWorld["msg"];
+
+			wss.broadcastAll(JSON.stringify(returnData),ws);	
+			return;
 		}
 
 		// checking to make sure if new world has been added

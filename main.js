@@ -56,7 +56,19 @@ var worldsArray = new Array();
 
 function postComment(){
 	console.log("commnet :" + $("#comment-input").val());
-	$("#chat-box").append($("#comment-input").val()+ "<hr/>");
+	
+	if (worldId != ""){
+		dataToSend = {};
+		dataToSend["state"] = {};
+		dataToSend["wid"] = worldId;
+		dataToSend["type"] = "msg";
+		dataToSend["game"] = gameId;
+		dataToSend["msg"] = $("#comment-input").val().trim();
+		socket.send(JSON.stringify(dataToSend));
+	}
+	else
+		$("#chat-box").append("Pls select a world first<hr/>");
+
 	$("#comment-input").val("");
 }
 
@@ -79,8 +91,13 @@ function logDrag(event, ui){
 }
 
 function setWorldId(val){
+
+	if(worldId!=val.trim())
+		$("#chat-box").html("");
 	worldId = val.trim();
 	$("#world-dropdown").html(worldId);
+	hideWelcomeMsg();
+
 }
 
 function updateGame(game){
@@ -117,6 +134,7 @@ function ChooseGame(game){
 
 function hideWelcomeMsg(){
 	document.getElementById("welcome").style.visibility='hidden';
+	updateGame(1);
 }
 
 function resetWorldForAll(){
@@ -177,6 +195,12 @@ $(function() {
 
 		var dataType =  dataReceived["type"];
 
+		if (dataType == "msg"){
+			if(worldId == dataReceived["wid"]){
+				$("#chat-box").append(dataReceived["msg"]+ "<hr/>");
+				return;
+			}
+		}
 		//if (dataType == "worldList"){
 		worldsArray = dataReceived["worlds"];
 		$("#worldList").html("<li class=\"dropdown-header\">Select a World</li>");
@@ -197,6 +221,7 @@ $(function() {
 				updateGame(dataReceived["game"]);
 			}
 		}
+		
 
 	}
 
