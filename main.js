@@ -141,37 +141,37 @@ $.ajax({
       var weatherinfo = json['weather'];
       if(weatherinfo[0]['main'] == "Thunderstorm")
       {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
 	   }
       else if (weatherinfo[0]['main'] == "Drizzle")
       {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/rain.jpg)');
 	   }
       else if (weatherinfo[0]['main'] == "Rain")
       {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/rain.jpg)');
 	   }
       else if (weatherinfo[0]['main'] == "Snow")
       {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/snow.jpg)');
 	   }
       else if (weatherinfo[0]['main'] == "Clouds")
 	  {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/clouds.jpg)');
 	  }
       else if (weatherinfo[0]['main'] == "Extreme")
       {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
 	   }
       else
       {
-	   		document.getElementById("chat-box").innerHTML = weatherinfo[0]['main'];
+	   		console.log(weatherinfo[0]['main']);
 	   		$('#bg').css('background-image','url(images/background/clear.jpg)');
 	   }
     }
