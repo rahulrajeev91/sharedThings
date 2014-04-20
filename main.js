@@ -1,3 +1,5 @@
+
+///Variables ////////////////////////////////////////////////////////////////////////////////////
 var DefaultWorld= {
 	"x1":{"top":86,"left":46},
 	"x2":{"top":86,"left":46},
@@ -37,9 +39,20 @@ var DefaultWorld= {
 	"chboard":{"top":86,"left":46}
 };
 
-var socket;
-world = {};
-worldChanges = {};
+var worldId = "";
+var gameId = 1;
+var world = {};
+var dataToSend = {};
+
+var dataReceived = {};
+var dataType = "";
+var dataID= "";
+var stateChanges = {};
+var worldsArray = new Array();
+
+//var worldChanges = {};
+
+/// Functions ////////////////////////////////////////////////////////////////////////////////////
 
 function postComment(){
 	console.log("commnet :" + $("#comment-input").val());
@@ -48,46 +61,178 @@ function postComment(){
 }
 
 function logDrag(event, ui){
-	//updating local copy of world
-	$("#world img").each(function(){
-		world[$(this).attr("id")] = $(this).position();
-	});
-	console.log(JSON.stringify(world));
+	// //updating local copy of world
+	// $("#world img").each(function(){
+	// 	world[$(this).attr("id")] = $(this).position();
+	// });
+	// console.log(JSON.stringify(world));
 
 	var changes = {};
 	changes[event.target.id] = ui.offset;
-	socket.send(JSON.stringify(changes));
+
+	dataToSend = {};
+	dataToSend["state"] = changes;
+	dataToSend["wid"] = worldId;
+	dataToSend["type"] = "updateWorld";
+	dataToSend["game"] = gameId;
+	socket.send(JSON.stringify(dataToSend));
 }
 
-function ChooseGame(game){
-	console.log("Choosing game : "+game);
+function setWorldId(val){
+	worldId = val.trim();
+	$("#world-dropdown").html(worldId);
+}
+
+function updateGame(game){
 	if(game==0){
 		document.getElementById("ttt").style.visibility='hidden';
 		document.getElementById("checkers").style.visibility='hidden';
 	}
 	if(game==1){
+		gameId = game;
 		document.getElementById("ttt").style.visibility='visible';
 		document.getElementById("checkers").style.visibility='hidden';
 	}
 	else if(game==2){
+		gameId = game;
 		document.getElementById("ttt").style.visibility='hidden';
 		document.getElementById("checkers").style.visibility='visible';
 	}
 }
 
+function ChooseGame(game){
+	console.log("Choosing game : "+game);
+
+	if(game==1||game ==2){
+		gameId = game;
+		dataToSend = {};
+		dataToSend["state"] = {};
+		dataToSend["wid"] = worldId;
+		dataToSend["type"] = "updateWorld";
+		dataToSend["game"] = gameId;
+		socket.send(JSON.stringify(dataToSend));
+		updateGame(gameId);
+	}
+}
+
+function hideWelcomeMsg(){
+	document.getElementById("welcome").style.visibility='hidden';
+}
+
 function resetWorldForAll(){
 	resetWorld();
-	socket.send(JSON.stringify(DefaultWorld));
+
+	dataToSend = {};
+	dataToSend["state"] = DefaultWorld;
+	dataToSend["wid"] = worldId;
+	dataToSend["type"] = "updateWorld";
+	dataToSend["game"] = gameId;
+	socket.send(JSON.stringify(dataToSend));
 }
 
 function resetWorld(){
 	for (var value in DefaultWorld){
-	  
 	  $("#"+value).offset(DefaultWorld[value]);
 	}
 	console.log("Resetting World");
 	//world = DefaultWorld;
 }
+
+function changeWorld(val){
+	setWorldId(worldsArray[val]);
+
+	dataToSend = {};
+	dataToSend["state"] = {};
+	dataToSend["wid"] = worldId;
+	dataToSend["type"] = "worldIDChange";
+	dataToSend["game"] = 1;
+	resetWorld();
+	socket.send(JSON.stringify(dataToSend));
+}
+
+$(function() { 
+	resetWorld();
+	updateGame(0);
+	
+	socket = new WebSocket("ws://"+server+":"+port);
+	socket.onopen = function (event) {
+		console.log("connected");
+	};
+	socket.onclose = function (event) {
+		alert("Server Disconnected. Pls Reconnect or Refresh")
+		console.log("closed code:" + event.code + " reason:" +event.reason + " wasClean:"+event.wasClean);
+	};
+
+	socket.onmessage = function (event) {
+		// worldChanges= JSON.parse(event.data);
+		// for (var value in worldChanges){
+		//   console.log(value + " -> " + JSON.stringify(worldChanges[value]));
+		//   world[value] = worldChanges[value];   //updating local copy of world
+
+		//   $("#"+value).offset(worldChanges[value]);
+		// }
+
+		console.log(event.data);
+		dataReceived= JSON.parse(event.data);
+
+		var dataType =  dataReceived["type"];
+
+		//if (dataType == "worldList"){
+		worldsArray = dataReceived["worlds"];
+		$("#worldList").html("<li class=\"dropdown-header\">Select a World</li>");
+		for (var i in worldsArray) {
+			$("#worldList").append("<li><a href=\"#\" onclick = \"changeWorld("+i+")\">"+worldsArray[i]+"</a></li>");
+		}
+		if (worldsArray.length == 0)
+			$("#worldList").html("<li class=\"dropdown-header\">No Worlds defined. Add a new one. </li>");
+
+		if (dataType == "worldState" || dataType == "updateWorld"){
+			if(worldId == dataReceived["wid"]){
+				hideWelcomeMsg();
+				stateChanges = dataReceived["state"];
+				for (var value in stateChanges){
+					//console.log(value + " -> " + JSON.stringify(stateChanges[value]));
+					$("#"+value).offset(stateChanges[value]);
+				}
+				updateGame(dataReceived["game"]);
+			}
+		}
+
+	}
+
+	$( "#newWorldForm" ).submit(function( event ) {
+		event.preventDefault();
+		setWorldId($("#newWorldName").val().trim());
+		// $("#worldList").append($("#NewWorldName").val()+"<br/>");
+		$("#newWorldName").val("");
+
+		dataToSend = {};
+		dataToSend["state"] = {};
+		dataToSend["wid"] = worldId;
+		dataToSend["type"] = "worldIDChange";
+		dataToSend["game"] = 1;
+		resetWorld();
+		socket.send(JSON.stringify(dataToSend));
+	});
+
+
+	// $("#world img").draggable(); 
+	$(".draggable").draggable({containment: "#world", scroll: false}); 
+	$("#world img").on("dragstart", function(event, ui) { logDrag(event, ui); });
+	$("#world img").on("dragstop" , function(event, ui) { logDrag(event, ui); });
+	$("#world img").on("drag"     , function(event, ui) { logDrag(event, ui); });
+
+	//Geolocation
+    var timeoutVal = 10 * 1000 * 1000;
+    navigator.geolocation.getCurrentPosition( displayPosition, displayError, { enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 });
+
+    //Shake  
+    window.addEventListener ("devicemotion", handleMotionEvent, true);
+});
+
+
+
+///Mobile UI Features////////////////////////////////////////////////////////////////////////////////////
 
 function round(a){
 	return Math.round(100*a)/100;
@@ -130,89 +275,53 @@ weather();
 
 function weather() 
 {
-$api_url = "http://api.openweathermap.org/data/2.5/weather?lat="+ curr_Latitude + "&lon=" + curr_Longitude;
-$.ajax({
-  dataType: 'json',
-  url: $api_url,
-  success: function(json)
-  {
-    console.log(JSON.stringify(json));
-    if (json["cod"] =='200'){
-      var weatherinfo = json['weather'];
-      if(weatherinfo[0]['main'] == "Thunderstorm")
-      {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
-	   }
-      else if (weatherinfo[0]['main'] == "Drizzle")
-      {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/rain.jpg)');
-	   }
-      else if (weatherinfo[0]['main'] == "Rain")
-      {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/rain.jpg)');
-	   }
-      else if (weatherinfo[0]['main'] == "Snow")
-      {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/snow.jpg)');
-	   }
-      else if (weatherinfo[0]['main'] == "Clouds")
+	$api_url = "http://api.openweathermap.org/data/2.5/weather?lat="+ curr_Latitude + "&lon=" + curr_Longitude;
+	$.ajax({
+	  dataType: 'json',
+	  url: $api_url,
+	  success: function(json)
 	  {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/clouds.jpg)');
+	    console.log(JSON.stringify(json));
+	    if (json["cod"] =='200'){
+	      var weatherinfo = json['weather'];
+	      if(weatherinfo[0]['main'] == "Thunderstorm")
+	      {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
+		   }
+	      else if (weatherinfo[0]['main'] == "Drizzle")
+	      {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/rain.jpg)');
+		   }
+	      else if (weatherinfo[0]['main'] == "Rain")
+	      {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/rain.jpg)');
+		   }
+	      else if (weatherinfo[0]['main'] == "Snow")
+	      {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/snow.jpg)');
+		   }
+	      else if (weatherinfo[0]['main'] == "Clouds")
+		  {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/clouds.jpg)');
+		  }
+	      else if (weatherinfo[0]['main'] == "Extreme")
+	      {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
+		   }
+	      else
+	      {
+		   		console.log(weatherinfo[0]['main']);
+		   		$('#bg').css('background-image','url(images/background/clear.jpg)');
+		   }
+	    }
+	    else
+	      ;//error
 	  }
-      else if (weatherinfo[0]['main'] == "Extreme")
-      {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/thunderstorm.jpg)');
-	   }
-      else
-      {
-	   		console.log(weatherinfo[0]['main']);
-	   		$('#bg').css('background-image','url(images/background/clear.jpg)');
-	   }
-    }
-    else
-      ;//error
-  }
-});   
+	});   
 }
-$(function() { 
-	resetWorld();
-	ChooseGame(1);
-	
-	socket = new WebSocket("ws://"+server+":"+port);
-	socket.onopen = function (event) {
-		console.log("connected");
-	};
-	socket.onclose = function (event) {
-		alert("Server Disconnected. Pls Reconnect or Refresh")
-		console.log("closed code:" + event.code + " reason:" +event.reason + " wasClean:"+event.wasClean);
-	};
-
-	socket.onmessage = function (event) {
-		worldChanges= JSON.parse(event.data);
-		for (var value in worldChanges){
-		  console.log(value + " -> " + JSON.stringify(worldChanges[value]));
-		  world[value] = worldChanges[value];   //updating local copy of world
-
-		  $("#"+value).offset(worldChanges[value]);
-		}
-	}
-
-	// $("#world img").draggable(); 
-	$(".draggable").draggable({containment: "#world", scroll: false}); 
-	$("#world img").on("dragstart", function(event, ui) { logDrag(event, ui); });
-	$("#world img").on("dragstop" , function(event, ui) { logDrag(event, ui); });
-	$("#world img").on("drag"     , function(event, ui) { logDrag(event, ui); });
-
-	//Geolocation
-    var timeoutVal = 10 * 1000 * 1000;
-    navigator.geolocation.getCurrentPosition( displayPosition, displayError, { enableHighAccuracy: true, timeout: timeoutVal, maximumAge: 0 });
-
-    //Shake  
-    window.addEventListener ("devicemotion", handleMotionEvent, true);
-});
