@@ -1,6 +1,20 @@
 <!--  
 CP3101B Assignment 3 - exercise 8 Client
 Including World ID and allowing users to choose/create world to share
+
+Output Data : {"type":"<Type of request>",wid":"<NameOfWorld>", "state":"<Hash containing all the changed states>"}
+
+	type:
+		"worldIDChange"	: World ID Changed
+		"getWorldState"	: Get world state
+		"updateWorld"	: sending updated world
+
+Input Data : {"type":"<Type of data>",wid":"<NameOfWorld>", "state":"<Hash containing all the changed states>", "worlds":"<array of all the world names>"}
+
+	type:
+		"worldList"		: Sending World name List
+		"worldState"	: sending world state
+		"updateWorld"	: sending world state changes
 -->
 
 <!doctype html>
@@ -22,22 +36,74 @@ Including World ID and allowing users to choose/create world to share
 		<script src="config.js" ></script>		
 		<script>
 			var socket;
-			var world_id = "Earth";
-			universe = [];
-			universeChanges = [];
-			world = {};
-			worldChanges = {};
-			stateChanges = {};
+			var worldId = "";
+			var defaultWorld = {
+				"tttboard":{"top":110,"left":62},
+				"o5":{"top":9,"left":80},
+				"o4":{"top":9,"left":80},
+				"o3":{"top":9,"left":80},
+				"o2":{"top":9,"left":80},
+				"o1":{"top":9,"left":80},
+				"x5":{"top":9,"left":9},
+				"x4":{"top":9,"left":9},
+				"x3":{"top":9,"left":9},
+				"x2":{"top":9,"left":9},
+				"x1":{"top":9,"left":9},
+			};
+			var world = {};
+			var dataToSend = {};
+
+			var dataReceived = {};
+			var dataType = "";
+			var dataID= "";
+			var stateChanges = {};
+			var worldsArray = new Array();
 
 			function logDrag(event, ui){
 				var changes = {};
 				changes[event.target.id] = ui.offset;
-				worldChanges["state"] = changes;
-				worldChanges["wid"] = world_id;
-				socket.send(JSON.stringify(worldChanges));
+
+				dataToSend = {};
+				dataToSend["state"] = changes;
+				dataToSend["wid"] = worldId;
+				dataToSend["type"] = "updateWorld";
+				socket.send(JSON.stringify(dataToSend));
+			}
+
+			function resetWorld(){
+				document.getElementById("world").style.visibility="visible";
+				for (var value in defaultWorld){
+					$("#"+value).offset(defaultWorld[value]);
+				}
+			}
+
+			function changeWorld(val){
+				worldId = worldsArray[val];
+
+				dataToSend = {};
+				dataToSend["state"] = {};
+				dataToSend["wid"] = worldId;
+				dataToSend["type"] = "worldIDChange";
+				resetWorld();
+				socket.send(JSON.stringify(dataToSend));
 			}
 
 			$(function() { 
+
+				$( "#newWorldForm" ).submit(function( event ) {
+					event.preventDefault();
+					worldId = $("#NewWorldName").val().trim();
+					// $("#worldList").append($("#NewWorldName").val()+"<br/>");
+					$("#NewWorldName").val("");
+
+					dataToSend = {};
+					dataToSend["state"] = {};
+					dataToSend["wid"] = worldId;
+					dataToSend["type"] = "worldIDChange";
+					resetWorld();
+					socket.send(JSON.stringify(dataToSend));
+				});
+
 				socket = new WebSocket("ws://"+server+":"+port);
 				socket.onopen = function (event) {
 					console.log("connected");
@@ -48,28 +114,31 @@ Including World ID and allowing users to choose/create world to share
 				};
 
 				socket.onmessage = function (event) {
-					// universeChanges = event.data;
-					// for (var i in universeChanges)
-					// {
-					// 	if(universeChanges[i].wid == world_id)
-					// 	{
-					// 		console.log(universeChanges[i].wid);
-					// 		worldChanges = universeChanges[i];
-					// 	}
-					// }
-					worldChanges= JSON.parse(event.data);
-					stateChanges = worldChanges["state"];
-					console.log(worldChanges["wid"]);
-					if(world_id == worldChanges["wid"])
-					{
-						for (var value in stateChanges){
-						  console.log(value + " -> " + JSON.stringify(stateChanges[value]));
-						  $("#"+value).offset(stateChanges[value]);
+					console.log(event.data);
+					dataReceived= JSON.parse(event.data);
+
+					var dataType =  dataReceived["type"];
+
+					//if (dataType == "worldList"){
+					worldsArray = dataReceived["worlds"];
+					$("#worldList").html("");
+					for (var i in worldsArray) {
+						$("#worldList").append("<li><a href=\"#\" onclick = \"changeWorld("+i+")\">"+worldsArray[i]+"</a></li>");
+					}
+
+					if (dataType == "worldState" || dataType == "updateWorld"){
+						if(worldId == dataReceived["wid"]){
+
+							stateChanges = dataReceived["state"];
+							for (var value in stateChanges){
+								//console.log(value + " -> " + JSON.stringify(stateChanges[value]));
+								$("#"+value).offset(stateChanges[value]);
+							}
 						}
 					}
 				}
 
-				$("#world img").draggable(); 
+				$("#world img").draggable({containment: "#world", scroll: false}); 
 				$("#world img").on("dragstart", function(event, ui) { logDrag(event, ui); });
 				$("#world img").on("dragstop" , function(event, ui) { logDrag(event, ui); });
 				$("#world img").on("drag"     , function(event, ui) { logDrag(event, ui); });
@@ -77,7 +146,8 @@ Including World ID and allowing users to choose/create world to share
 		</script>
 	</head>
 	<body>
-		<div id="world">
+		
+		<div id="world" style="height:300px; border:1px solid; visibility:hidden;">
 			<img id="x1" src="images/x.gif" style="z-index:2;" class="draggable" />
 			<img id="x2" src="images/x.gif" style="z-index:2;" class="draggable" />
 			<img id="x3" src="images/x.gif" style="z-index:2;" class="draggable" />
@@ -90,7 +160,13 @@ Including World ID and allowing users to choose/create world to share
 			<img id="o5" src="images/o.gif" style="z-index:2;" /class="draggable" >
 			<img id="tttboard" src="images/tictactoe.gif" style="z-index:1;" class="draggable" />
 		</div>
-		<div id="worldlist">
+		<div id="chooseWorld">
+			Add a new World
+			<form id="newWorldForm">
+				New World: <input type="text" id="NewWorldName">
+				<input type="submit" value="Add">
+			</form>
+			<div id = "worldList"></div>
 		</div>
 	</body>
 </html>
