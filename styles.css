@@ -1,0 +1,19 @@
+body {
+	position: fixed;
+	height : 100%;
+	width:100%;
+	padding-top: 70px; 
+	padding-bottom: 30px;
+}
+
+.full-body{
+	height : 100%;
+}
+
+#world{
+	height : 100%;
+}
+
+.draggable { 
+	position: fixed; 
+} 
