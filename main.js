@@ -41,6 +41,12 @@ var socket;
 world = {};
 worldChanges = {};
 
+function postComment(){
+	console.log("commnet :" + $("#comment-input").val());
+	$("#chat-box").append($("#comment-input").val()+ "<hr/>");
+	$("#comment-input").val("");
+}
+
 function logDrag(event, ui){
 	// //updating local copy of world
 	$("#world img").each(function(){
@@ -85,7 +91,7 @@ function resetWorld(){
 
 $(function() { 
 	resetWorld();
-	ChooseGame(0);
+	ChooseGame(1);
 	
 	socket = new WebSocket("ws://"+server+":"+port);
 	socket.onopen = function (event) {

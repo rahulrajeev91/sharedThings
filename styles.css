@@ -3,15 +3,34 @@ body {
 	height : 100%;
 	width:100%;
 	padding-top: 70px; 
-	padding-bottom: 30px;
+	/*padding-bottom: 30px;*/
+}
+
+.reset-button {
+	margin-right:20px;
+}
+
+.mypanel{
+	padding-bottom: 20px;
 }
 
 .full-body{
 	height : 100%;
+	overflow: hidden;
 }
 
 #world{
 	height : 100%;
+}
+
+#chat-box{
+	height:100%;
+	padding-bottom: 60px;
+	overflow: scroll;
+}
+
+#chat-box hr {
+	margin: 5px 0;
 }
 
 .draggable { 
